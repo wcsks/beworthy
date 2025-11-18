@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upper School 2025-2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      /* WCS-ish blue & gold */
+      --primary: #0033A0;
+      --accent: #FFC72C;
+      --bg: #f3f5fb;
+      --card-bg: #ffffff;
+      --border: #d0d4e0;
+      --text: #222222;
+
+      /* Period colors (kept consistent for student recognition) */
+      --p1: #FFB6C1;
+      --p2: #F0D9B5;
+      --p3: #FFF176;
+      --p4: #A5D6A7;
+      --p5: #FFD54F;
+      --p6: #FFCC80;
+      --p7: #FFB74D;
+      --tutorials: #D7D7D7;
+      --break: #E0E0E0;
+      --lunch: #D7FFD7;
+      --drop: #FF8A65;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #eef2ff 0, var(--bg) 55%);
+      color: var(--text);
+    }
+
+    header {
+      background: linear-gradient(120deg, var(--primary), #001f5f);
+      color: #ffffff;
+      padding: 1rem 1.25rem 0.9rem;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    header p {
+      margin: 0.3rem 0 0;
+      font-size: 0.95rem;
+      opacity: 0.95;
+    }
+
+    main {
+      max-width: 950px;
+      margin: 0 auto;
+      padding: 1.1rem 1rem 1.75rem;
+    }
+
+    .today-banner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
+      font-size: 0.95rem;
+    }
+
+    .today-label { font-weight: 600; }
+
+    .today-date {
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.04);
+    }
+
+    .today-day-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #000;
+      font-weight: 800;
+      font-size: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .day-pill-label {
+      font-size: 0.75rem;
+      opacity: 0.75;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .note {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.08);
+      padding: 0.85rem 1rem 1rem;
+      border: 1px solid rgba(0,0,0,0.02);
+      margin-top: 0.9rem;
+    }
+
+    .card h2 {
+      margin: 0 0 0.4rem;
+      font-size: 1.15rem;
+      text-align: center;
+    }
+
+    .card h2 span.day-tag {
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .subheading {
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 0.6rem;
+      color: #555;
+    }
+
+    /* Schedule table: pill rows with full color background */
+    .schedule-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 5px; /* adds gap between pill rows */
+      font-size: 0.9rem;
+    }
+
+    .schedule-row {
+      /* no borders here; pills are created via border-radius on cells */
+    }
+
+    .schedule-label,
+    .schedule-time,
+    .color-bar {
+      padding: 0.4rem 0.5rem;
+    }
+
+    .color-bar {
+      width: 6px;
+      border-radius: 999px 0 0 999px;
+    }
+
+    .schedule-label {
+      font-weight: 600;
+      width: 45%;
+      white-space: nowrap;
+      border-radius: 0;
+    }
+
+    .schedule-time {
+      width: 55%;
+      border-radius: 0 999px 999px 0;
+    }
+
+    .schedule-label,
+    .schedule-time {
+      background: #ffffff;
+    }
+
+    /* Make the entire row share the same color */
+    .schedule-row[data-color] .color-bar,
+    .schedule-row[data-color] .schedule-label,
+    .schedule-row[data-color] .schedule-time {
+      background-color: attr(data-color color, #ffffff); /* ignored by some browsers, so we also set inline via JS */
+    }
+
+    /* Slight overlay to keep text legible on bright colors */
+    .schedule-row .schedule-label,
+    .schedule-row .schedule-time {
+      backdrop-filter: brightness(1.03);
+    }
+
+    .drop-row .schedule-label {
+      font-style: italic;
+    }
+
+    .status-message {
+      font-size: 0.8rem;
+      color: #a33;
+      margin-top: 0.4rem;
+      text-align: center;
+    }
+
+    /* Tabs for “View another day” */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0.4rem 0 0.75rem;
+      justify-content: center;
+    }
+
+    .tab-button {
+      border: 1px solid rgba(0,0,0,0.1);
+      background: #f8fafc;
+      color: #111827;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 2.5rem;
+      text-align: center;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    .tab-button:hover {
+      background: #fff1c7;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .tab-button.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+    }
+
+    .tabs-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      text-align: center;
+      color: #6b7280;
+      margin-bottom: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Upper School BeWorthy Days</h1>
+  <p>2025–2026 Daily Rotation Schedule</p>
+</header>
+
+<main>
+  <!-- Today banner -->
+  <section class="today-banner">
+    <div>
+      <span class="today-label">Today:</span>
+      <span id="today-date" class="today-date"></span>
+    </div>
+    <div>
+      <span class="today-label">BeWorthy Day:</span>
+      <span id="today-letter" class="today-day-chip">
+        <span class="day-pill-label">Letter Day</span>
+        <span id="today-letter-text">Loading…</span>
+      </span>
+    </div>
+  </section>
+  <p id="status" class="note"></p>
+
+  <!-- Today's schedule card -->
+  <section class="card">
+    <h2 id="today-schedule-title">Today's BeWorthy Schedule</h2>
+    <p class="subheading" id="today-subheading"></p>
+    <table class="schedule-table" id="today-schedule-table"></table>
+  </section>
+
+  <!-- Other days: tabs + schedule -->
+  <section class="card">
+    <div class="tabs-title">View another BeWorthy day</div>
+    <p class="subheading" id="tabs-subheading"></p>
+    <div class="tabs" id="day-tabs"></div>
+    <table class="schedule-table" id="tab-schedule-table"></table>
+  </section>
+</main>
+
+<script>
+  /******************************************************************
+   * 1. ENDPOINT – your Apps Script web app URL (already correct)
+   ******************************************************************/
+  const TODAY_LETTER_ENDPOINT =
+    "https://script.google.com/macros/s/AKfycbxfcZ4Tcyt-53OtmY5xxLMNM30LHJrN6nxGhrzqMPp8kwYBV5WdaLDuHrNv_2QUYfSJzg/exec";
+
+  /******************************************************************
+   * 2. COLOR PALETTE (kept in JS to drive row colors)
+   ******************************************************************/
+  const COLORS = {
+  tutorials: "#E0E0E0", // neutral grey
+  break:     "#F5F5F5", // lighter grey
+  lunch:     "#E2F3D9", // soft lunch green
+
+  // Period colors based on your PDF mapping:
+  // 1st - red, 2nd - orange, 3rd - yellow, 4th - green,
+  // 5th - blue, 6th - purple, 7th - violet
+
+  p1: "#F28B82", // red (1st)
+  p2: "#FBBC04", // orange (2nd)
+  p3: "#FFF475", // yellow (3rd)
+  p4: "#CCFF90", // green (4th)
+  p5: "#AECBFA", // blue (5th)
+  p6: "#D7AEFB", // purple (6th)
+  p7: "#C58AF9", // violet (7th)
+
+  drop: "#FF8A65" // drop highlight
+};
+
+
+  /******************************************************************
+   * 3. SCHEDULES – bell schedules for each BeWorthy day
+   ******************************************************************/
+  const SCHEDULES = {
+    B: [
+      { label: "AM Tutorials",   time: "8:00–8:35",   color: COLORS.tutorials },
+      { label: "1st Period",     time: "8:40–9:45",   color: COLORS.p1 },
+      { label: "2nd Period",     time: "9:50–10:55",  color: COLORS.p2 },
+      { label: "Break",          time: "10:55–11:10", color: COLORS.break },
+      { label: "3rd Period",     time: "11:15–12:20", color: COLORS.p3 },
+      { label: "4th (North)",    time: "L 12:20–12:45, C 12:50–1:55", color: COLORS.p4 },
+      { label: "4th (South)",    time: "C 12:25–1:30, L 1:30–1:55",   color: COLORS.p4 },
+      { label: "5th Period",     time: "2:00–3:05",   color: COLORS.p5 },
+      { label: "PM Tutorials",   time: "3:10–4:00",   color: COLORS.tutorials },
+      { label: "Drop 6",         time: "",            color: COLORS.drop },
+      { label: "Drop 7",         time: "",            color: COLORS.drop },
+    ],
+
+    E: [
+      { label: "AM Tutorials",   time: "8:00–8:35",   color: COLORS.tutorials },
+      { label: "6th Period",     time: "8:40–9:45",   color: COLORS.p6 },
+      { label: "7th Period",     time: "9:50–10:55",  color: COLORS.p7 },
+      { label: "Break",          time: "10:55–11:10", color: COLORS.break },
+      { label: "1st Period",     time: "11:15–12:20", color: COLORS.p1 },
+      { label: "2nd (North)",    time: "L 12:20–12:45, C 12:50–1:55", color: COLORS.p2 },
+      { label: "2nd (South)",    time: "C 12:25–1:30, L 1:30–1:55",   color: COLORS.p2 },
+      { label: "3rd Period",     time: "2:00–3:05",   color: COLORS.p3 },
+      { label: "PM Tutorials",   time: "3:10–4:00",   color: COLORS.tutorials },
+      { label: "Drop 4",         time: "",            color: COLORS.drop },
+      { label: "Drop 5",         time: "",            color: COLORS.drop },
+    ],
+
+    W: [
+      { label: "AM Tutorials",   time: "8:00–8:35",   color: COLORS.tutorials },
+      { label: "4th Period",     time: "8:40–9:45",   color: COLORS.p4 },
+      { label: "5th Period",     time: "9:50–10:55",  color: COLORS.p5 },
+      { label: "Break",          time: "10:55–11:05", color: COLORS.break },
+      { label: "6th Period",     time: "11:10–12:15", color: COLORS.p6 },
+      { label: "Open Lunch",     time: "12:15–1:00",  color: COLORS.lunch },
+      { label: "7th Period",     time: "1:05–2:10",   color: COLORS.p7 },
+      { label: "1st Period",     time: "2:15–3:20",   color: COLORS.p1 },
+      { label: "PM Tutorials",   time: "3:25–4:00",   color: COLORS.tutorials },
+      { label: "Drop 2",         time: "",            color: COLORS.drop },
+      { label: "Drop 3",         time: "",            color: COLORS.drop },
+    ],
+
+    O: [
+      { label: "AM Tutorials",   time: "8:00–8:35",   color: COLORS.tutorials },
+      { label: "2nd Period",     time: "8:40–9:45",   color: COLORS.p2 },
+      { label: "3rd Period",     time: "9:50–10:55",  color: COLORS.p3 },
+      { label: "Break",          time: "10:55–11:10", color: COLORS.break },
+      { label: "4th Period",     time: "11:15–12:20", color: COLORS.p4 },
+      { label: "5th (North)",    time: "L 12:20–12:45, C 12:50–1:55", color: COLORS.p5 },
+      { label: "5th (South)",    time: "C 12:25–1:30, L 1:30–1:55",   color: COLORS.p5 },
+      { label: "6th Period",     time: "2:00–3:05",   color: COLORS.p6 },
+      { label: "PM Tutorials",   time: "3:10–4:00",   color: COLORS.tutorials },
+      { label: "Drop 7",         time: "",            color: COLORS.drop },
+      { label: "Drop 1",         time: "",            color: COLORS.drop },
+    ],
+
+    R: [
+      { label: "AM Tutorials",   time: "8:00–8:35",   color: COLORS.tutorials },
+      { label: "7th Period",     time: "8:40–9:45",   color: COLORS.p7 },
+      { label: "1st Period",     time: "9:50–10:55",  color: COLORS.p1 },
+      { label: "Break",          time: "10:55–11:10", color: COLORS.break },
+      { label: "2nd Period",     time: "11:15–12:20", color: COLORS.p2 },
+      { label: "3rd (North)",    time: "L 12:20–12:45, C 12:50–1:55", color: COLORS.p3 },
+      { label: "3rd (South)",    time: "C 12:25–1:30, L 1:30–1:55",   color: COLORS.p3 },
+      { label: "4th Period",     time: "2:00–3:05",   color: COLORS.p4 },
+      { label: "PM Tutorials",   time: "3:10–4:00",   color: COLORS.tutorials },
+      { label: "Drop 5",         time: "",            color: COLORS.drop },
+      { label: "Drop 6",         time: "",            color: COLORS.drop },
+    ],
+
+    T: [
+      { label: "AM Tutorials",   time: "8:00–8:35",   color: COLORS.tutorials },
+      { label: "5th Period",     time: "8:40–9:45",   color: COLORS.p5 },
+      { label: "6th Period",     time: "9:50–10:55",  color: COLORS.p6 },
+      { label: "Break",          time: "10:55–11:10", color: COLORS.break },
+      { label: "7th Period",     time: "11:15–12:20", color: COLORS.p7 },
+      { label: "1st (North)",    time: "L 12:20–12:45, C 12:50–1:55", color: COLORS.p1 },
+      { label: "1st (South)",    time: "C 12:25–1:30, L 1:30–1:55",   color: COLORS.p1 },
+      { label: "2nd Period",     time: "2:00–3:05",   color: COLORS.p2 },
+      { label: "PM Tutorials",   time: "3:10–4:00",   color: COLORS.tutorials },
+      { label: "Drop 3",         time: "",            color: COLORS.drop },
+      { label: "Drop 4",         time: "",            color: COLORS.drop },
+    ],
+
+    H: [
+      { label: "AM Tutorials",   time: "8:00–8:35",   color: COLORS.tutorials },
+      { label: "3rd Period",     time: "8:40–9:45",   color: COLORS.p3 },
+      { label: "4th Period",     time: "9:50–10:55",  color: COLORS.p4 },
+      { label: "Break",          time: "10:55–11:05", color: COLORS.break },
+      { label: "5th Period",     time: "11:10–12:15", color: COLORS.p5 },
+      { label: "Open Lunch",     time: "12:15–1:00",  color: COLORS.lunch },
+      { label: "6th Period",     time: "1:05–2:10",   color: COLORS.p6 },
+      { label: "7th Period",     time: "2:15–3:20",   color: COLORS.p7 },
+      { label: "PM Tutorials",   time: "3:25–4:00",   color: COLORS.tutorials },
+      { label: "Drop 1",         time: "",            color: COLORS.drop },
+      { label: "Drop 2",         time: "",            color: COLORS.drop },
+    ],
+
+    Y: [
+      { label: "AM Tutorials",   time: "8:00–8:35",   color: COLORS.tutorials },
+      { label: "1st Period",     time: "8:40-9:20",  color: COLORS.p1 },
+      { label: "2nd Period",     time: "9:25-10:05",   color: COLORS.p2 },
+      { label: "Flex",           time: "10:05-10:40", color: COLORS.tutorials },
+      { label: "3rd Period",     time: "10:45-11:25",   color: COLORS.p3 },
+      { label: "4th Period",     time: "11:30-12:10",  color: COLORS.p4 },
+      { label: "5th (North)",    time: "L 12:10–12:35, C 12:40–1:20", color: COLORS.p5 },
+      { label: "5th (South)",    time: "C 12:15–12:55, L 12:55–1:20",   color: COLORS.p5 },
+      { label: "6th Period",     time: "1:25–2:05",   color: COLORS.p6 },
+      { label: "7th Period",     time: "2:10–2:50",   color: COLORS.p7 },
+      { label: "US Meetings – No Tutorials", time: "2:55–4:00", color: COLORS.tutorials },
+      // No drop rows on Y Day (All 7 Classes)
+    ]
+  };
+
+  const LETTERS = Object.keys(SCHEDULES);
+
+  function formatFriendlyDate(d) {
+    return d.toLocaleDateString(undefined, {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  }
+
+  function renderSchedule(letter, tableId, headingPrefix) {
+    const schedule = SCHEDULES[letter] || [];
+    const table = document.getElementById(tableId);
+    table.innerHTML = "";
+
+    schedule.forEach(block => {
+      const tr = document.createElement("tr");
+      const isDrop = block.label.startsWith("Drop");
+      tr.className = "schedule-row" + (isDrop ? " drop-row" : "");
+      tr.dataset.color = block.color || "#ffffff";
+
+      const colorCell = document.createElement("td");
+      colorCell.className = "color-bar";
+      colorCell.style.backgroundColor = block.color || "#ffffff";
+
+      const labelCell = document.createElement("td");
+      labelCell.className = "schedule-label";
+      labelCell.textContent = block.label;
+      labelCell.style.backgroundColor = block.color || "#ffffff";
+
+      const timeCell = document.createElement("td");
+      timeCell.className = "schedule-time";
+      timeCell.textContent = block.time;
+      timeCell.style.backgroundColor = block.color || "#ffffff";
+
+      tr.appendChild(colorCell);
+      tr.appendChild(labelCell);
+      tr.appendChild(timeCell);
+      table.appendChild(tr);
+    });
+  }
+
+  function renderTabs(initialLetter) {
+    const tabsContainer = document.getElementById("day-tabs");
+    tabsContainer.innerHTML = "";
+
+    LETTERS.forEach(letter => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tab-button" + (letter === initialLetter ? " active" : "");
+      btn.textContent = letter + " Day";
+      btn.dataset.day = letter;
+      btn.addEventListener("click", () => setActiveDay(letter));
+      tabsContainer.appendChild(btn);
+    });
+
+    document.getElementById("tabs-subheading").textContent =
+      `Currently showing ${initialLetter} Day.`;
+    renderSchedule(initialLetter, "tab-schedule-table", "");
+  }
+
+  function setActiveDay(letter) {
+    document.querySelectorAll(".tab-button").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.day === letter);
+    });
+    document.getElementById("tabs-subheading").textContent =
+      `Currently showing ${letter} Day.`;
+    renderSchedule(letter, "tab-schedule-table", "");
+  }
+
+  async function initPage() {
+    const now = new Date();
+    document.getElementById("today-date").textContent = formatFriendlyDate(now);
+
+    const statusEl = document.getElementById("status");
+    const letterChipText = document.getElementById("today-letter-text");
+
+    let letter = "B";   // default fallback
+
+    try {
+      const resp = await fetch(TODAY_LETTER_ENDPOINT);
+      const data = await resp.json();
+      if (data && data.letter && LETTERS.includes(data.letter)) {
+        letter = data.letter;
+        letterChipText.textContent = `${letter} Day`;
+      } else {
+        letterChipText.textContent = "Unknown";
+        statusEl.textContent =
+          "Could not determine today's letter from the calendar. Showing B Day schedule by default.";
+      }
+    } catch (err) {
+      console.error("Error fetching today letter:", err);
+      letterChipText.textContent = "Not available";
+      statusEl.textContent =
+        "Unable to contact the rotation service. Showing B Day schedule by default.";
+    }
+
+    // Render today's schedule and build tabs starting on today's letter
+    document.getElementById("today-schedule-title").innerHTML =
+      `Today's BeWorthy Schedule – <span class="day-tag">${letter} Day</span>`;
+
+    renderSchedule(letter, "today-schedule-table", "Today's");
+    renderTabs(letter);
+  }
+
+  document.addEventListener("DOMContentLoaded", initPage);
+</script>
+</body>
+</html>
