@@ -506,52 +506,38 @@
   }
 
   async function initPage() {
-  const now = new Date();
-  document.getElementById("today-date").textContent = formatFriendlyDate(now);
+    const now = new Date();
+    document.getElementById("today-date").textContent = formatFriendlyDate(now);
 
-  const statusEl = document.getElementById("status");
-  const letterChipText = document.getElementById("today-letter-text");
+    const statusEl = document.getElementById("status");
+    const letterChipText = document.getElementById("today-letter-text");
 
-  let letter = null;
+    let letter = "B";   // default fallback
 
-  try {
-    const resp = await fetch(TODAY_LETTER_ENDPOINT + "?t=" + Date.now(), {
-      cache: "no-store"
-    });
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    const data = await resp.json();
-
-    const raw = String((data && data.letter) || "").trim();
-    const candidate = raw.charAt(0).toUpperCase();
-
-    if (LETTERS.includes(candidate)) {
-      letter = candidate;
-    } else {
-      console.warn("Rotation service returned unexpected letter:", raw);
+    try {
+      const resp = await fetch(TODAY_LETTER_ENDPOINT);
+      const data = await resp.json();
+      if (data && data.letter && LETTERS.includes(data.letter)) {
+        letter = data.letter;
+        letterChipText.textContent = `${letter} Day`;
+      } else {
+        letterChipText.textContent = "Unknown";
+        statusEl.textContent =
+          "Could not determine today's letter from the calendar. Showing B Day schedule by default.";
+      }
+    } catch (err) {
+      console.error("Error fetching today letter:", err);
+      letterChipText.textContent = "Not available";
+      statusEl.textContent =
+        "Unable to contact the rotation service. Showing B Day schedule by default.";
     }
-  } catch (err) {
-    console.error("Error fetching today letter:", err);
-  }
 
-  if (!letter) {
-    // No valid letter – show a clear message and don't pretend it's B
-    letterChipText.textContent = "Unavailable";
-    statusEl.textContent =
-      "Rotation service didn't return a valid letter for today. Please try refreshing in a moment.";
-    return; // don't render any schedule
-  }
+    // Render today's schedule and build tabs starting on today's letter
+    document.getElementById("today-schedule-title").innerHTML =
+      `Today's BeWorthy Schedule – <span class="day-tag">${letter} Day</span>`;
 
-  // Normal success path
-  letterChipText.textContent = `${letter} Day`;
-  statusEl.textContent = "";
-
-  document.getElementById("today-schedule-title").innerHTML =
-    `Today's BeWorthy Schedule – <span class="day-tag">${letter} Day</span>`;
-  document.getElementById("today-subheading").textContent =
-    `Below is the bell schedule for ${letter} Day.`;
-
-  renderSchedule(letter, "today-schedule-table");
-  renderTabs(letter);
+    renderSchedule(letter, "today-schedule-table", "Today's");
+    renderTabs(letter);
   }
 
   document.addEventListener("DOMContentLoaded", initPage);
