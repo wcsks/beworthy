@@ -512,39 +512,39 @@
   const statusEl = document.getElementById("status");
   const letterChipText = document.getElementById("today-letter-text");
 
-  let letterFromService = null;
+  let letter = null;
 
   try {
-    const resp = await fetch(TODAY_LETTER_ENDPOINT_BASE + "?t=" + Date.now(), {
+    const resp = await fetch(TODAY_LETTER_ENDPOINT + "?t=" + Date.now(), {
       cache: "no-store"
     });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
     const data = await resp.json();
-    console.log("Rotation service response:", data);
 
-    if (data && typeof data.letter === "string") {
-      const candidate = data.letter.toUpperCase();
-      if (LETTERS.includes(candidate)) {
-        letterFromService = candidate;
-      }
+    const raw = String((data && data.letter) || "").trim();
+    const candidate = raw.charAt(0).toUpperCase();
+
+    if (LETTERS.includes(candidate)) {
+      letter = candidate;
+    } else {
+      console.warn("Rotation service returned unexpected letter:", raw);
     }
   } catch (err) {
     console.error("Error fetching today letter:", err);
   }
 
-  // 👉 Decide final letter *after* fetch attempt
-  let letter;
-  if (letterFromService) {
-    letter = letterFromService;
-    letterChipText.textContent = `${letter} Day`;
-    statusEl.textContent = "";
-  } else {
-    letter = "B"; // fallback only when service truly fails
-    letterChipText.textContent = `${letter} Day (fallback)`;
+  if (!letter) {
+    // No valid letter – show a clear message and don't pretend it's B
+    letterChipText.textContent = "Unavailable";
     statusEl.textContent =
-      "Rotation service didn’t return a letter. Showing B Day schedule by default.";
+      "Rotation service didn't return a valid letter for today. Please try refreshing in a moment.";
+    return; // don't render any schedule
   }
 
-  // Now render everything using the final 'letter'
+  // Normal success path
+  letterChipText.textContent = `${letter} Day`;
+  statusEl.textContent = "";
+
   document.getElementById("today-schedule-title").innerHTML =
     `Today's BeWorthy Schedule – <span class="day-tag">${letter} Day</span>`;
   document.getElementById("today-subheading").textContent =
@@ -552,7 +552,7 @@
 
   renderSchedule(letter, "today-schedule-table");
   renderTabs(letter);
-}
+  }
 
   document.addEventListener("DOMContentLoaded", initPage);
 </script>
