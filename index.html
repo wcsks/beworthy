@@ -506,41 +506,68 @@
   }
 
   async function initPage() {
-    const now = new Date();
-    document.getElementById("today-date").textContent = formatFriendlyDate(now);
+  const now = new Date();
+  const todayDateEl = document.getElementById("today-date");
+  const statusEl = document.getElementById("status");
+  const letterChipText = document.getElementById("today-letter-text");
 
-    const statusEl = document.getElementById("status");
-    const letterChipText = document.getElementById("today-letter-text");
-
-    let letter = "B";   // default fallback
-
-    try {
-      const resp = await fetch(TODAY_LETTER_ENDPOINT);
-      const data = await resp.json();
-      if (data && data.letter && LETTERS.includes(data.letter)) {
-        letter = data.letter;
-        letterChipText.textContent = `${letter} Day`;
-      } else {
-        letterChipText.textContent = "Unknown";
-        statusEl.textContent =
-          "Could not determine today's letter from the calendar. Showing B Day schedule by default.";
-      }
-    } catch (err) {
-      console.error("Error fetching today letter:", err);
-      letterChipText.textContent = "Not available";
-      statusEl.textContent =
-        "Unable to contact the rotation service. Showing B Day schedule by default.";
-    }
-
-    // Render today's schedule and build tabs starting on today's letter
-    document.getElementById("today-schedule-title").innerHTML =
-      `Today's BeWorthy Schedule – <span class="day-tag">${letter} Day</span>`;
-
-    renderSchedule(letter, "today-schedule-table", "Today's");
-    renderTabs(letter);
+  if (todayDateEl) {
+    todayDateEl.textContent = formatFriendlyDate(now);
   }
 
-  document.addEventListener("DOMContentLoaded", initPage);
+  // Show "Loading…" until we know the real day
+  letterChipText.textContent = "Loading…";
+  statusEl.textContent = "";
+
+  let letter = null;
+
+  try {
+    const resp = await fetch(TODAY_LETTER_ENDPOINT + "?t=" + Date.now(), {
+      cache: "no-store"
+    });
+
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+
+    const data = await resp.json();
+    console.log("Rotation service response:", data);
+
+    if (data && typeof data.letter === "string") {
+      const candidate = data.letter.trim().charAt(0).toUpperCase();
+      if (LETTERS.includes(candidate)) {
+        letter = candidate;
+      }
+    }
+  } catch (err) {
+    console.error("Error fetching today letter:", err);
+  }
+
+  if (!letter) {
+    // ❌ No valid rotation data — show message, DO NOT render today's schedule
+    letterChipText.textContent = "Unavailable";
+    statusEl.textContent =
+      "Unable to load today's BeWorthy rotation. Please choose a day below.";
+
+    // ⬇️ Still render tabs so users can pick a day manually
+    const defaultTabDay = "B"; // or whatever default you prefer
+    renderTabs(defaultTabDay);
+    return;
+  }
+
+  // ✔️ Successfully fetched a valid letter — render normally
+  letterChipText.textContent = `${letter} Day`;
+  statusEl.textContent = "";
+
+  document.getElementById("today-schedule-title").innerHTML =
+    `Today's BeWorthy Schedule – <span class="day-tag">${letter} Day</span>`;
+  document.getElementById("today-subheading").textContent =
+    `Below is the bell schedule for ${letter} Day.`;
+
+  renderSchedule(letter, "today-schedule-table");
+  renderTabs(letter);
+}
+
+document.addEventListener("DOMContentLoaded", initPage);
+
 </script>
 </body>
 </html>
