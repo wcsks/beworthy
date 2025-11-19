@@ -506,39 +506,53 @@
   }
 
   async function initPage() {
-    const now = new Date();
-    document.getElementById("today-date").textContent = formatFriendlyDate(now);
+  const now = new Date();
+  document.getElementById("today-date").textContent = formatFriendlyDate(now);
 
-    const statusEl = document.getElementById("status");
-    const letterChipText = document.getElementById("today-letter-text");
+  const statusEl = document.getElementById("status");
+  const letterChipText = document.getElementById("today-letter-text");
 
-    let letter = "B";   // default fallback
+  let letterFromService = null;
 
-    try {
-      const resp = await fetch(TODAY_LETTER_ENDPOINT);
-      const data = await resp.json();
-      if (data && data.letter && LETTERS.includes(data.letter)) {
-        letter = data.letter;
-        letterChipText.textContent = `${letter} Day`;
-      } else {
-        letterChipText.textContent = "Unknown";
-        statusEl.textContent =
-          "Could not determine today's letter from the calendar. Showing B Day schedule by default.";
+  try {
+    const resp = await fetch(TODAY_LETTER_ENDPOINT_BASE + "?t=" + Date.now(), {
+      cache: "no-store"
+    });
+    const data = await resp.json();
+    console.log("Rotation service response:", data);
+
+    if (data && typeof data.letter === "string") {
+      const candidate = data.letter.toUpperCase();
+      if (LETTERS.includes(candidate)) {
+        letterFromService = candidate;
       }
-    } catch (err) {
-      console.error("Error fetching today letter:", err);
-      letterChipText.textContent = "Not available";
-      statusEl.textContent =
-        "Unable to contact the rotation service. Showing B Day schedule by default.";
     }
-
-    // Render today's schedule and build tabs starting on today's letter
-    document.getElementById("today-schedule-title").innerHTML =
-      `Today's BeWorthy Schedule – <span class="day-tag">${letter} Day</span>`;
-
-    renderSchedule(letter, "today-schedule-table", "Today's");
-    renderTabs(letter);
+  } catch (err) {
+    console.error("Error fetching today letter:", err);
   }
+
+  // 👉 Decide final letter *after* fetch attempt
+  let letter;
+  if (letterFromService) {
+    letter = letterFromService;
+    letterChipText.textContent = `${letter} Day`;
+    statusEl.textContent = "";
+  } else {
+    letter = "B"; // fallback only when service truly fails
+    letterChipText.textContent = `${letter} Day (fallback)`;
+    statusEl.textContent =
+      "Rotation service didn’t return a letter. Showing B Day schedule by default.";
+  }
+
+  // Now render everything using the final 'letter'
+  document.getElementById("today-schedule-title").innerHTML =
+    `Today's BeWorthy Schedule – <span class="day-tag">${letter} Day</span>`;
+  document.getElementById("today-subheading").textContent =
+    `Below is the bell schedule for ${letter} Day.`;
+
+  renderSchedule(letter, "today-schedule-table");
+  renderTabs(letter);
+}
 
   document.addEventListener("DOMContentLoaded", initPage);
 </script>
